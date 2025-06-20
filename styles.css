@@ -17,7 +17,7 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 1rem;
 }
@@ -30,9 +30,27 @@ header {
     border-bottom: 1px solid #ddd;
 }
 
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+}
+
+.header-left {
+    gap: 1rem;
+}
+
 header h1 {
     font-weight: 600;
     color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.note-info {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background-color: #f8f9fa;
 }
 
 .status-indicator {
@@ -54,50 +72,174 @@ header h1 {
 }
 
 main {
-    display: flex;
     flex: 1;
-    gap: 1rem;
-    height: calc(100vh - 120px);
     margin: 1rem 0;
     overflow: hidden;
-}
-
-.editor-container, .preview-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border-radius: 6px;
-    overflow: hidden;
     background-color: #fff;
+    border-radius: 6px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
-.editor-header, .preview-header {
-    padding: 0.75rem 1rem;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #ddd;
-    font-weight: 600;
+.inline-editor-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.editor-area, .preview-area {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    padding: 1rem;
+    transition: transform 0.3s ease;
+}
+
+/* By default, show editor only */
+.preview-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #fff;
+    transform: translateX(100%);
+}
+
+/* When preview mode is active */
+.preview-mode .editor-area {
+    transform: translateX(-100%);
+}
+
+.preview-mode .preview-area {
+    transform: translateX(0);
+}
+
+/* Show both side by side on large screens when dual-view is enabled */
+@media (min-width: 768px) {
+    .dual-view .inline-editor-container {
+        flex-direction: row;
+    }
+    
+    .dual-view .editor-area,
+    .dual-view .preview-area {
+        position: relative;
+        transform: none;
+        flex: 1;
+        width: 50%;
+    }
+    
+    .dual-view .preview-area {
+        border-left: 1px solid #eee;
+    }
+}
+
+#editor {
+    width: 100%;
+    height: 100%;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 16px;
+    line-height: 1.6;
+    border: none;
+    resize: none;
+    outline: none;
+    background-color: transparent;
+}
+
+/* Markdown styling */
+.preview-area {
+    padding-bottom: 2rem;
+}
+
+.preview-area h1, .preview-area h2, .preview-area h3,
+.preview-area h4, .preview-area h5, .preview-area h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+}
+
+.preview-area h1 {
+    border-bottom: 2px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+.preview-area h2 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+}
+
+.preview-area p {
+    margin: 0.75rem 0;
+}
+
+.preview-area blockquote {
+    border-left: 4px solid #dfe2e5;
+    padding-left: 1rem;
+    color: #6a737d;
+    margin: 1rem 0;
+}
+
+.preview-area pre {
+    background-color: #f6f8fa;
+    border-radius: 3px;
+    padding: 16px;
+    overflow: auto;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+}
+
+.preview-area code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    padding: 0.2em 0.4em;
+    background-color: rgba(27, 31, 35, 0.05);
+    border-radius: 3px;
+    font-size: 85%;
+}
+
+.preview-area pre code {
+    background-color: transparent;
+    padding: 0;
+}
+
+.preview-area table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+.preview-area table th, .preview-area table td {
+    padding: 6px 13px;
+    border: 1px solid #dfe2e5;
+}
+
+.preview-area table tr {
+    background-color: #fff;
+    border-top: 1px solid #c6cbd1;
+}
+
+.preview-area table tr:nth-child(2n) {
+    background-color: #f6f8fa;
+}
+
+.preview-area img {
+    max-width: 100%;
+}
+
+footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.note-id-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-#noteId {
-    padding: 4px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 1rem 0;
+    border-top: 1px solid #ddd;
+    color: #7f8c8d;
     font-size: 14px;
-    width: 180px;
 }
 
-#connectBtn {
-    padding: 4px 12px;
+.footer-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+#toggleViewBtn, #createNewBtn {
+    padding: 6px 12px;
     background-color: #3498db;
     color: white;
     border: none;
@@ -106,180 +248,33 @@ main {
     font-size: 14px;
 }
 
-#connectBtn:hover {
+#toggleViewBtn:hover, #createNewBtn:hover {
     background-color: #2980b9;
 }
 
-#editor {
-    flex: 1;
-    width: 100%;
-    padding: 1rem;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 16px;
-    line-height: 1.6;
-    border: none;
-    resize: none;
+#createNewBtn {
+    background-color: #2ecc71;
 }
 
-#editor:focus {
-    outline: none;
+#createNewBtn:hover {
+    background-color: #27ae60;
 }
 
-#preview {
-    flex: 1;
-    padding: 1rem;
-    overflow-y: auto;
-    background-color: #fff;
-}
-
-/* Markdown styling */
-.markdown-body {
-    padding-bottom: 2rem;
-}
-
-.markdown-body h1, .markdown-body h2, .markdown-body h3,
-.markdown-body h4, .markdown-body h5, .markdown-body h6 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
-}
-
-.markdown-body h1 {
-    border-bottom: 2px solid #eaecef;
-    padding-bottom: 0.3em;
-}
-
-.markdown-body h2 {
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: 0.3em;
-}
-
-.markdown-body p {
-    margin: 0.75rem 0;
-}
-
-.markdown-body blockquote {
-    border-left: 4px solid #dfe2e5;
-    padding-left: 1rem;
-    color: #6a737d;
-    margin: 1rem 0;
-}
-
-.markdown-body pre {
-    background-color: #f6f8fa;
-    border-radius: 3px;
-    padding: 16px;
-    overflow: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-.markdown-body code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    padding: 0.2em 0.4em;
-    background-color: rgba(27, 31, 35, 0.05);
-    border-radius: 3px;
-    font-size: 85%;
-}
-
-.markdown-body pre code {
-    background-color: transparent;
-    padding: 0;
-}
-
-.markdown-body table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1rem 0;
-}
-
-.markdown-body table th, .markdown-body table td {
-    padding: 6px 13px;
-    border: 1px solid #dfe2e5;
-}
-
-.markdown-body table tr {
-    background-color: #fff;
-    border-top: 1px solid #c6cbd1;
-}
-
-.markdown-body table tr:nth-child(2n) {
-    background-color: #f6f8fa;
-}
-
-footer {
-    text-align: center;
-    padding: 1rem 0;
-    color: #7f8c8d;
-    font-size: 14px;
-}
-
-footer a {
-    color: #3498db;
-    text-decoration: none;
-}
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.4);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 80%;
-    max-width: 800px;
-}
-
-.close {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover {
-    color: black;
-}
-
-.modal-content h2 {
-    margin-bottom: 20px;
-}
-
-.modal-content table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.modal-content th, .modal-content td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.modal-content th {
-    background-color: #f8f9fa;
-}
-
-/* Responsive styles */
-@media (max-width: 960px) {
-    main {
+@media (max-width: 600px) {
+    header {
         flex-direction: column;
-        height: auto;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
     
-    .editor-container, .preview-container {
-        height: 50vh;
+    .header-right {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    footer {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
     }
 }

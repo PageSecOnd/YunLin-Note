@@ -1,67 +1,104 @@
 document.addEventListener('DOMContentLoaded', function() {
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
-    const noteIdInput = document.getElementById('noteId');
-    const connectBtn = document.getElementById('connectBtn');
     const syncStatus = document.getElementById('syncStatus');
     const statusDot = syncStatus.querySelector('.status-dot');
     const statusText = syncStatus.querySelector('.status-text');
+    const lastUpdatedElement = document.getElementById('lastUpdated');
+    const toggleViewBtn = document.getElementById('toggleViewBtn');
+    const createNewBtn = document.getElementById('createNewBtn');
+    const container = document.querySelector('.inline-editor-container');
+    const currentNoteIdElement = document.getElementById('currentNoteId');
     
-    const modal = document.getElementById('helpModal');
-    const helpBtn = document.getElementById('helpBtn');
-    const closeBtn = document.querySelector('.close');
+    // Check if we were redirected from a note page
+    const redirectPath = sessionStorage.getItem('redirectPath');
+    if (redirectPath && window.location.pathname === '/') {
+        // Clear the redirect path
+        sessionStorage.removeItem('redirectPath');
+        
+        // Update history state to show the correct URL
+        window.history.replaceState(null, '', redirectPath);
+        
+        // Now currentNoteId will be correctly set from the URL
+        currentNoteId = getIdFromUrl();
+        currentNoteIdElement.textContent = currentNoteId || 'Home';
+    }
     
     let socket = null;
-    let currentNoteId = '';
     let isConnected = false;
     let lastTypingTime = 0;
+    let viewMode = localStorage.getItem('viewMode') || 'editor'; // editor, preview, dual
     const typingDelay = 500; // ms delay before sending updates
     
-    // API URL - Replace with your Vercel deployment URL
-    const API_URL = 'https://note.backend.yunlinsan.ren'; 
+    // Get note ID from URL path
+    let currentNoteId = getIdFromUrl();
     
-    // Initialize with a random note ID suggestion
-    noteIdInput.value = generateRandomId();
+    // Display current note ID
+    currentNoteIdElement.textContent = currentNoteId || 'Home';
     
-    // Set up markdown rendering
+    // API URL
+    const API_URL = 'https://note.backend.yunlinsan.ren';
+    
+    // Set up markdown rendering with syntax highlighting
     function renderMarkdown() {
         const markdownText = editor.value;
         preview.innerHTML = marked.parse(markdownText);
+        
+        // Apply syntax highlighting
+        document.querySelectorAll('#preview pre code').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
     }
     
-    // Generate a random ID for notes
-    function generateRandomId(length = 8) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    // Get note ID from URL
+    function getIdFromUrl() {
+        const path = window.location.pathname;
+        
+        // Check if path has exactly 7 characters (/ followed by 6 chars)
+        if (path.length === 7 && path.startsWith('/')) {
+            return path.substring(1); // Remove leading slash
+        }
+        
+        return null; // Home page or invalid path
+    }
+    
+    // Generate a random 6-character ID
+    function generateRandomId() {
+        const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < 6; i++) {
             result += chars.charAt(Math.floor(Math.random() * chars.length));
         }
         return result;
     }
     
+    // Navigate to a new note
+    function navigateToNote(noteId) {
+        window.location.href = `/${noteId}`;
+    }
+    
     // Connect to WebSocket server
-    function connectToServer(noteId) {
+    function connectToServer() {
+        if (!currentNoteId) return; // Don't connect if on home page
+        
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.close();
         }
         
         try {
-            // WebSocket connection to Vercel
-            // Note: Vercel supports WebSockets on their paid plans
-            // For free plans, we'll use a compatible service or fallback to polling
-            const wsUrl = `${API_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws/${noteId}`;
+            // WebSocket connection to backend
+            const wsUrl = `${API_URL.replace('https://', 'wss://').replace('http://', 'ws://')}/ws/${currentNoteId}`;
             socket = new WebSocket(wsUrl);
             
             socket.onopen = function() {
                 isConnected = true;
-                currentNoteId = noteId;
                 updateConnectionStatus(true);
-                console.log(`Connected to note: ${noteId}`);
+                console.log(`Connected to note: ${currentNoteId}`);
                 
                 // Request the current note content from server
                 const message = {
                     type: 'get_content',
-                    noteId: noteId
+                    noteId: currentNoteId
                 };
                 socket.send(JSON.stringify(message));
             };
@@ -73,8 +110,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Auto-reconnect after a delay
                 setTimeout(() => {
-                    if (!isConnected && currentNoteId === noteId) {
-                        connectToServer(noteId);
+                    if (!isConnected && getIdFromUrl() === currentNoteId) {
+                        connectToServer();
                     }
                 }, 3000);
             };
@@ -85,8 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('WebSocket error:', error);
                 
                 // Fallback to polling if WebSockets fail
-                if (!isConnected && currentNoteId === noteId) {
-                    setupPollingFallback(noteId);
+                if (!isConnected && getIdFromUrl() === currentNoteId) {
+                    setupPollingFallback();
                 }
             };
             
@@ -98,45 +135,49 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.sender !== socket.id) {
                         editor.value = data.content;
                         renderMarkdown();
+                        updateLastUpdated();
                     }
                 } else if (data.type === 'initial_content') {
                     editor.value = data.content;
                     renderMarkdown();
+                    updateLastUpdated(data.lastUpdated);
                 }
             };
         } catch (error) {
             console.error('Failed to connect:', error);
             updateConnectionStatus(false, 'Failed to connect');
-            setupPollingFallback(noteId);
+            setupPollingFallback();
         }
     }
     
-    // Fallback to polling if WebSockets are not supported on Vercel free tier
-    function setupPollingFallback(noteId) {
-        currentNoteId = noteId;
+    // Fallback to polling if WebSockets are not supported
+    function setupPollingFallback() {
+        if (!currentNoteId) return; // Don't poll if on home page
+        
         updateConnectionStatus(true, 'Connected (polling mode)');
         
         // Initial content fetch
-        fetchNoteContent(noteId);
+        fetchNoteContent();
         
         // Setup polling interval
         const pollingInterval = setInterval(() => {
-            if (currentNoteId !== noteId) {
+            if (getIdFromUrl() !== currentNoteId) {
                 clearInterval(pollingInterval);
                 return;
             }
-            fetchNoteContent(noteId);
+            fetchNoteContent();
         }, 2000);
     }
     
     // Fetch note content via REST API
-    function fetchNoteContent(noteId) {
-        fetch(`${API_URL}/api/notes/${noteId}`)
+    function fetchNoteContent() {
+        fetch(`${API_URL}/api/notes/${currentNoteId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.content !== editor.value) {
                     editor.value = data.content;
                     renderMarkdown();
+                    updateLastUpdated(data.lastUpdated);
                 }
             })
             .catch(error => {
@@ -145,13 +186,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Update note content via REST API
-    function updateNoteContent(noteId, content) {
-        fetch(`${API_URL}/api/notes/${noteId}`, {
+    function updateNoteContent(content) {
+        fetch(`${API_URL}/api/notes/${currentNoteId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ content })
+        })
+        .then(() => {
+            updateLastUpdated();
         })
         .catch(error => {
             console.error('Error updating note:', error);
@@ -162,15 +206,39 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateConnectionStatus(connected, message = null) {
         if (connected) {
             statusDot.classList.add('connected');
-            statusText.textContent = message || `Connected to: ${currentNoteId}`;
+            statusText.textContent = message || `Connected`;
         } else {
             statusDot.classList.remove('connected');
             statusText.textContent = message || 'Disconnected';
         }
     }
     
+    // Format date for display
+    function formatDate(timestamp) {
+        if (!timestamp) {
+            return 'Never';
+        }
+        
+        const date = new Date(timestamp);
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }).format(date);
+    }
+    
+    // Update last updated timestamp
+    function updateLastUpdated(timestamp = null) {
+        const time = timestamp || Date.now();
+        lastUpdatedElement.textContent = formatDate(time);
+    }
+    
     // Send content changes to server
     function sendContentUpdate() {
+        if (!currentNoteId) return; // Don't send updates if on home page
+        
         if (isConnected) {
             if (socket && socket.readyState === WebSocket.OPEN) {
                 const message = {
@@ -182,9 +250,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 socket.send(JSON.stringify(message));
             } else {
                 // Fallback to REST API if WebSocket is not available
-                updateNoteContent(currentNoteId, editor.value);
+                updateNoteContent(editor.value);
             }
         }
+    }
+    
+    // Toggle between view modes (editor, preview, dual)
+    function toggleView() {
+        container.classList.remove('editor-mode', 'preview-mode', 'dual-view');
+        
+        if (viewMode === 'editor') {
+            viewMode = 'preview';
+            container.classList.add('preview-mode');
+            toggleViewBtn.textContent = 'Show Editor';
+        } else if (viewMode === 'preview') {
+            viewMode = 'dual';
+            container.classList.add('dual-view');
+            toggleViewBtn.textContent = 'Show Editor Only';
+        } else {
+            viewMode = 'editor';
+            container.classList.add('editor-mode');
+            toggleViewBtn.textContent = 'Show Preview';
+        }
+        
+        localStorage.setItem('viewMode', viewMode);
+    }
+    
+    // Set initial view mode
+    function initViewMode() {
+        container.classList.remove('editor-mode', 'preview-mode', 'dual-view');
+        
+        if (viewMode === 'preview') {
+            container.classList.add('preview-mode');
+            toggleViewBtn.textContent = 'Show Editor';
+        } else if (viewMode === 'dual') {
+            container.classList.add('dual-view');
+            toggleViewBtn.textContent = 'Show Editor Only';
+        } else {
+            // Default to editor mode
+            container.classList.add('editor-mode');
+            toggleViewBtn.textContent = 'Show Preview';
+        }
+    }
+    
+    // Handle home page content
+    function setupHomePage() {
+        editor.value = `# Welcome to Markdown Notepad
+
+This is the home page. You can:
+
+- Create a new note using the "Create New Note" button
+- Or navigate directly to a note by adding a 6-character ID to the URL
+  - For example: ${window.location.origin}/abcdef
+
+## Features
+
+- Markdown rendering with syntax highlighting
+- Real-time updates across devices
+- Toggle between editor, preview, and split view modes
+`;
+        renderMarkdown();
+        editor.setAttribute('readonly', 'readonly');
+        updateConnectionStatus(true, 'Home Page');
     }
     
     // Event listener for editor changes
@@ -195,47 +322,55 @@ document.addEventListener('DOMContentLoaded', function() {
         const now = Date.now();
         if (now - lastTypingTime > typingDelay) {
             lastTypingTime = now;
-            if (isConnected) {
-                sendContentUpdate();
-            }
+            sendContentUpdate();
         } else {
             clearTimeout(editor.typingTimer);
             editor.typingTimer = setTimeout(function() {
                 lastTypingTime = Date.now();
-                if (isConnected) {
-                    sendContentUpdate();
-                }
+                sendContentUpdate();
             }, typingDelay);
         }
     });
     
-    // Connect button handler
-    connectBtn.addEventListener('click', function() {
-        const noteId = noteIdInput.value.trim();
-        if (noteId) {
-            connectToServer(noteId);
+    // Toggle view button handler
+    toggleViewBtn.addEventListener('click', toggleView);
+    
+    // Create new note button handler
+    createNewBtn.addEventListener('click', function() {
+        const newNoteId = generateRandomId();
+        navigateToNote(newNoteId);
+    });
+    
+    // Initialize the application
+    initViewMode();
+    
+    // Check if we're on the home page or a note page
+    if (!currentNoteId) {
+        setupHomePage();
+    } else {
+        // Auto-save content to localStorage as backup
+        const localStorageKey = `markdown-content-${currentNoteId}`;
+        
+        // Restore content from localStorage if available
+        const savedContent = localStorage.getItem(localStorageKey);
+        if (savedContent) {
+            editor.value = savedContent;
+            renderMarkdown();
         }
+        
+        // Set up autosave
+        setInterval(() => {
+            if (editor.value) {
+                localStorage.setItem(localStorageKey, editor.value);
+            }
+        }, 5000);
+        
+        // Connect to server
+        connectToServer();
+    }
+    
+    // Handle history navigation (back/forward buttons)
+    window.addEventListener('popstate', function() {
+        window.location.reload();
     });
-    
-    // Modal handlers for markdown help
-    helpBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        modal.style.display = 'block';
-    });
-    
-    closeBtn.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-    
-    window.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
-    
-    // Initial markdown rendering
-    renderMarkdown();
-    
-    // Automatically focus the editor
-    editor.focus();
 });
