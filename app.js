@@ -1,4 +1,4 @@
-const API_BASE = "https://backend.note.yunlinsan.ren"; // 替换为你的 Vercel 部署后端地址
+const API_BASE = "https://note.backend.yunlinsan.ren"; // 替换为你的 Vercel 部署后端地址
 
 const textarea = document.getElementById('note-input');
 const rendered = document.getElementById('rendered-markdown');
