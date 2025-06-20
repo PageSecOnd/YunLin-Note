@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const typingDelay = 500; // ms delay before sending updates
     
     // API URL - Replace with your Vercel deployment URL
-    const API_URL = 'https://markdown-notepad-backend.vercel.app'; 
+    const API_URL = 'https://note.backend.yunlinsan.ren'; 
     
     // Initialize with a random note ID suggestion
     noteIdInput.value = generateRandomId();
