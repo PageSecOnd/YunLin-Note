@@ -14,16 +14,27 @@ let lastContent = '';
 async function init() {
     // 从后端加载内容
     try {
-        const response = await fetch(`${API_BASE_URL}/notes`);
+        const response = await fetch(`${API_BASE_URL}/notes`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'cors'
+        });
+        
         if (response.ok) {
             const data = await response.json();
             editor.value = data.content || '';
             lastContent = editor.value;
             updatePreview();
+            status.textContent = '加载成功';
+        } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
     } catch (error) {
         console.error('加载笔记失败:', error);
-        status.textContent = '加载失败';
+        status.textContent = '加载失败 - 使用本地存储';
+        loadFromLocalStorage();
     }
 
     // 设置编辑器事件监听
@@ -69,16 +80,39 @@ async function saveContent(content) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ content }),
+            mode: 'cors'
         });
         
         if (response.ok) {
             status.textContent = '已保存 ' + new Date().toLocaleTimeString();
+            saveToLocalStorage(content);
         } else {
-            throw new Error('保存失败');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
     } catch (error) {
-        console.error('保存笔记失败:', error);
-        status.textContent = '保存失败';
+        console.error('保存到后端失败:', error);
+        saveToLocalStorage(content);
+        status.textContent = '后端保存失败 - 已保存到本地存储';
+    }
+}
+
+// 本地存储作为后备
+function saveToLocalStorage(content) {
+    try {
+        localStorage.setItem('noteContent', content);
+    } catch (e) {
+        console.error('本地存储失败:', e);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        const content = localStorage.getItem('noteContent') || '';
+        editor.value = content;
+        lastContent = content;
+        updatePreview();
+    } catch (e) {
+        console.error('从本地存储加载失败:', e);
     }
 }
 
