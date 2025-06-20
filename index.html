@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Markdown Notepad</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Markdown parser library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Online Markdown Notepad</h1>
+            <div class="status-indicator" id="syncStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+        </header>
+        
+        <main>
+            <div class="editor-container">
+                <div class="editor-header">
+                    <span>Editor</span>
+                    <div class="note-id-container">
+                        <label for="noteId">Note ID:</label>
+                        <input type="text" id="noteId" placeholder="Enter a unique note ID">
+                        <button id="connectBtn">Connect</button>
+                    </div>
+                </div>
+                <textarea id="editor" placeholder="Write your markdown here..."></textarea>
+            </div>
+            
+            <div class="preview-container">
+                <div class="preview-header">Preview</div>
+                <div id="preview" class="markdown-body"></div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>© 2025 Online Markdown Notepad | <a href="#" id="helpBtn">Markdown Help</a></p>
+        </footer>
+    </div>
+
+    <!-- Modal for Markdown help -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Markdown Cheat Sheet</h2>
+            <table>
+                <tr>
+                    <th>Element</th>
+                    <th>Markdown Syntax</th>
+                </tr>
+                <tr>
+                    <td>Heading</td>
+                    <td><code># H1<br>## H2<br>### H3</code></td>
+                </tr>
+                <tr>
+                    <td>Bold</td>
+                    <td><code>**bold text**</code></td>
+                </tr>
+                <tr>
+                    <td>Italic</td>
+                    <td><code>*italicized text*</code></td>
+                </tr>
+                <tr>
+                    <td>Blockquote</td>
+                    <td><code>> blockquote</code></td>
+                </tr>
+                <tr>
+                    <td>List</td>
+                    <td><code>1. First item<br>2. Second item<br>- Unordered item</code></td>
+                </tr>
+                <tr>
+                    <td>Code</td>
+                    <td><code>`code`</code></td>
+                </tr>
+                <tr>
+                    <td>Link</td>
+                    <td><code>[title](https://www.example.com)</code></td>
+                </tr>
+                <tr>
+                    <td>Image</td>
+                    <td><code>![alt text](image.jpg)</code></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
