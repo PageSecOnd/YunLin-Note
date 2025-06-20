@@ -1,280 +1,31 @@
-/* Reset and base styles */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f5f5f5;
-    height: 100vh;
+  font-family: Arial, sans-serif;
+  padding: 16px;
+  background: #f8f8f8;
 }
-
-.container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
+h1 {
+  text-align: center;
 }
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid #ddd;
+textarea {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 12px;
+  font-size: 16px;
 }
-
-.header-left, .header-right {
-    display: flex;
-    align-items: center;
+button {
+  padding: 8px 16px;
+  font-size: 16px;
+  cursor: pointer;
 }
-
-.header-left {
-    gap: 1rem;
+#saved-status {
+  margin-left: 10px;
+  color: #228B22;
 }
-
-header h1 {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.5rem;
-}
-
-.note-info {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    background-color: #f8f9fa;
-}
-
-.status-indicator {
-    display: flex;
-    align-items: center;
-    font-size: 14px;
-}
-
-.status-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #e74c3c;
-    margin-right: 6px;
-}
-
-.status-dot.connected {
-    background-color: #2ecc71;
-}
-
-main {
-    flex: 1;
-    margin: 1rem 0;
-    overflow: hidden;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-
-.inline-editor-container {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.editor-area, .preview-area {
-    flex: 1;
-    width: 100%;
-    overflow-y: auto;
-    padding: 1rem;
-    transition: transform 0.3s ease;
-}
-
-/* By default, show editor only */
-.preview-area {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background-color: #fff;
-    transform: translateX(100%);
-}
-
-/* When preview mode is active */
-.preview-mode .editor-area {
-    transform: translateX(-100%);
-}
-
-.preview-mode .preview-area {
-    transform: translateX(0);
-}
-
-/* Show both side by side on large screens when dual-view is enabled */
-@media (min-width: 768px) {
-    .dual-view .inline-editor-container {
-        flex-direction: row;
-    }
-    
-    .dual-view .editor-area,
-    .dual-view .preview-area {
-        position: relative;
-        transform: none;
-        flex: 1;
-        width: 50%;
-    }
-    
-    .dual-view .preview-area {
-        border-left: 1px solid #eee;
-    }
-}
-
-#editor {
-    width: 100%;
-    height: 100%;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 16px;
-    line-height: 1.6;
-    border: none;
-    resize: none;
-    outline: none;
-    background-color: transparent;
-}
-
-/* Markdown styling */
-.preview-area {
-    padding-bottom: 2rem;
-}
-
-.preview-area h1, .preview-area h2, .preview-area h3,
-.preview-area h4, .preview-area h5, .preview-area h6 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    color: #2c3e50;
-}
-
-.preview-area h1 {
-    border-bottom: 2px solid #eaecef;
-    padding-bottom: 0.3em;
-}
-
-.preview-area h2 {
-    border-bottom: 1px solid #eaecef;
-    padding-bottom: 0.3em;
-}
-
-.preview-area p {
-    margin: 0.75rem 0;
-}
-
-.preview-area blockquote {
-    border-left: 4px solid #dfe2e5;
-    padding-left: 1rem;
-    color: #6a737d;
-    margin: 1rem 0;
-}
-
-.preview-area pre {
-    background-color: #f6f8fa;
-    border-radius: 3px;
-    padding: 16px;
-    overflow: auto;
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-}
-
-.preview-area code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    padding: 0.2em 0.4em;
-    background-color: rgba(27, 31, 35, 0.05);
-    border-radius: 3px;
-    font-size: 85%;
-}
-
-.preview-area pre code {
-    background-color: transparent;
-    padding: 0;
-}
-
-.preview-area table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 1rem 0;
-}
-
-.preview-area table th, .preview-area table td {
-    padding: 6px 13px;
-    border: 1px solid #dfe2e5;
-}
-
-.preview-area table tr {
-    background-color: #fff;
-    border-top: 1px solid #c6cbd1;
-}
-
-.preview-area table tr:nth-child(2n) {
-    background-color: #f6f8fa;
-}
-
-.preview-area img {
-    max-width: 100%;
-}
-
-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0;
-    border-top: 1px solid #ddd;
-    color: #7f8c8d;
-    font-size: 14px;
-}
-
-.footer-controls {
-    display: flex;
-    gap: 0.5rem;
-}
-
-#toggleViewBtn, #createNewBtn {
-    padding: 6px 12px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-#toggleViewBtn:hover, #createNewBtn:hover {
-    background-color: #2980b9;
-}
-
-#createNewBtn {
-    background-color: #2ecc71;
-}
-
-#createNewBtn:hover {
-    background-color: #27ae60;
-}
-
-@media (max-width: 600px) {
-    header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    .header-right {
-        width: 100%;
-        justify-content: flex-end;
-    }
-    
-    footer {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
-    }
+#rendered-markdown {
+  margin-top: 24px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 4px;
+  min-height: 100px;
+  box-shadow: 0 0 4px #ddd;
 }
