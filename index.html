@@ -3,40 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>简易笔记 - Markdown编辑器</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- 引入Markdown渲染库 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css">
-    <!-- 代码高亮 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.4.0/styles/github.min.css">
+    <title>简易 Note.ms 克隆</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="lib/github-markdown.min.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>简易笔记</h1>
-            <div class="save-status" id="saveStatus">所有更改已保存</div>
-        </header>
-        
-        <main>
-            <div class="editor-container">
-                <textarea id="editor" placeholder="开始输入Markdown内容..."></textarea>
-            </div>
-            <div class="preview-container markdown-body" id="preview">
-                <p>预览将在这里显示...</p>
-            </div>
-        </main>
-        
-        <footer>
-            <div class="controls">
-                <button id="saveButton">保存</button>
-                <button id="togglePreview">切换预览</button>
-                <span id="lastSaved">最后保存: 未保存</span>
-            </div>
-        </footer>
+        <div class="editor-container">
+            <textarea id="editor" placeholder="输入你的 Markdown 笔记..."></textarea>
+        </div>
+        <div class="preview-container markdown-body" id="preview"></div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.4.0/lib/highlight.min.js"></script>
+    <div class="status-bar" id="status">已保存</div>
+    <div class="footer">
+        <span>© 2023 YunLin-Note</span>
+        <span class="version">v1.0.0</span>
+    </div>
+    <script src="lib/marked.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
