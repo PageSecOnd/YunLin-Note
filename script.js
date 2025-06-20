@@ -10,6 +10,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('.inline-editor-container');
     const currentNoteIdElement = document.getElementById('currentNoteId');
     
+    let socket = null;
+    let isConnected = false;
+    let lastTypingTime = 0;
+    let viewMode = localStorage.getItem('viewMode') || 'editor'; // editor, preview, dual
+    const typingDelay = 500; // ms delay before sending updates
+    
+    // Get note ID from URL path - declare this function before using it
+    function getIdFromUrl() {
+        const path = window.location.pathname;
+        
+        // Check if path has exactly 7 characters (/ followed by 6 chars)
+        if (path.length === 7 && path.startsWith('/')) {
+            return path.substring(1); // Remove leading slash
+        }
+        
+        return null; // Home page or invalid path
+    }
+    
     // Check if we were redirected from a note page
     const redirectPath = sessionStorage.getItem('redirectPath');
     if (redirectPath && window.location.pathname === '/') {
@@ -18,25 +36,15 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update history state to show the correct URL
         window.history.replaceState(null, '', redirectPath);
-        
-        // Now currentNoteId will be correctly set from the URL
-        currentNoteId = getIdFromUrl();
-        currentNoteIdElement.textContent = currentNoteId || 'Home';
     }
     
-    let socket = null;
-    let isConnected = false;
-    let lastTypingTime = 0;
-    let viewMode = localStorage.getItem('viewMode') || 'editor'; // editor, preview, dual
-    const typingDelay = 500; // ms delay before sending updates
-    
-    // Get note ID from URL path
+    // Get note ID from URL - now this is safe to use after getIdFromUrl() is defined
     let currentNoteId = getIdFromUrl();
     
     // Display current note ID
     currentNoteIdElement.textContent = currentNoteId || 'Home';
     
-    // API URL
+    // API URL - make sure this points to your actual backend
     const API_URL = 'https://note.backend.yunlinsan.ren';
     
     // Set up markdown rendering with syntax highlighting
@@ -48,18 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('#preview pre code').forEach((block) => {
             hljs.highlightBlock(block);
         });
-    }
-    
-    // Get note ID from URL
-    function getIdFromUrl() {
-        const path = window.location.pathname;
-        
-        // Check if path has exactly 7 characters (/ followed by 6 chars)
-        if (path.length === 7 && path.startsWith('/')) {
-            return path.substring(1); // Remove leading slash
-        }
-        
-        return null; // Home page or invalid path
     }
     
     // Generate a random 6-character ID
@@ -135,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (data.sender !== socket.id) {
                         editor.value = data.content;
                         renderMarkdown();
-                        updateLastUpdated();
+                        updateLastUpdated(data.lastUpdated);
                     }
                 } else if (data.type === 'initial_content') {
                     editor.value = data.content;
@@ -182,6 +178,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error fetching note:', error);
+                updateConnectionStatus(false, 'Failed to fetch note');
             });
     }
     
@@ -194,11 +191,15 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ content })
         })
-        .then(() => {
-            updateLastUpdated();
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateLastUpdated(data.lastUpdated);
+            }
         })
         .catch(error => {
             console.error('Error updating note:', error);
+            updateConnectionStatus(false, 'Failed to save note');
         });
     }
     
